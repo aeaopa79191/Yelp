@@ -8,11 +8,15 @@
 
 import UIKit
 
-class BusinessesViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
+class BusinessesViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, UISearchResultsUpdating {
 
     var businesses: [Business]!
     
     @IBOutlet weak var tableView: UITableView!
+    
+    var filteredData: [Business]!
+    var searchController: UISearchController!
+    var searchKey: String!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -22,6 +26,15 @@ class BusinessesViewController: UIViewController, UITableViewDataSource, UITable
         tableView.rowHeight = UITableViewAutomaticDimension
         tableView.estimatedRowHeight = 120
 
+        //set up search bar
+        searchController = UISearchController(searchResultsController: nil)
+        searchController.searchResultsUpdater = self
+        searchController.searchBar.sizeToFit()
+        navigationItem.titleView = searchController.searchBar
+        searchController.hidesNavigationBarDuringPresentation = false
+        definesPresentationContext = true
+        
+        
         Business.searchWithTerm("Thai", completion: { (businesses: [Business]!, error: NSError!) -> Void in
             self.businesses = businesses
             self.tableView.reloadData()
@@ -64,6 +77,21 @@ class BusinessesViewController: UIViewController, UITableViewDataSource, UITable
         
         return cell
     }
+    
+    func updateSearchResultsForSearchController(searchController: UISearchController){
+        if filteredData == nil{
+            filteredData = businesses
+        }
+        if let searchText = searchController.searchBar.text{
+            if(searchText == ""){
+                businesses = filteredData
+                tableView.reloadData()
+            }else{
+                businesses = searchText.isEmpty ? businesses : businesses?.filter({ (business: Business) -> Bool in business.name!.rangeOfString(searchText, options: .CaseInsensitiveSearch) != nil
+                });
+                tableView.reloadData()
+            }
+        }}
 
     
 
